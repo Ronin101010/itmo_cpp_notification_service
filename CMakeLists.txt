@@ -52,6 +52,13 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
+# Подавляем новые предупреждения Clang в GoogleTest
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    if(TARGET gtest)
+        target_compile_options(gtest PRIVATE -Wno-undef -Wno-character-conversion)
+    endif()
+endif()
+
 FetchContent_Declare(
     benchmark
     GIT_REPOSITORY https://github.com/google/benchmark.git
@@ -59,6 +66,15 @@ FetchContent_Declare(
 )
 set(BENCHMARK_ENABLE_TESTING OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(benchmark)
+
+# Исправляем сборку benchmark под свежий Clang:
+# 1. Убираем -Werror (в версии 1.8.3 нет BENCHMARK_ENABLE_WERROR)
+# 2. Подавляем конкретное предупреждение, которое превращалось в ошибку
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    if(TARGET benchmark)
+        target_compile_options(benchmark PRIVATE -Wno-error -Wno-invalid-offsetof)
+    endif()
+endif()
 
 add_library(notification_lib STATIC
     src/notification.cpp
